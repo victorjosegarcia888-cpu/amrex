@@ -1,0 +1,163 @@
+#!/usr/bin/env bash
+#=============================================================================
+# Copyright 2022 Kitware, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#=============================================================================
+
+# This command allows to create a commit that bumps a submodule while creating
+# a nice commit message template. It will list all topics merged between the
+# current HEAD and the target commit, as well as constructing the URLs to the
+# merge requests.
+#
+# Usage: git bump <submodule-name> <target-commit>"
+#
+# <target-commit> can be any target compatible with the command `git checkout`.
+# <submodule-name> must be a valid submodule name (case sensitive), but doesn't
+# have to be the full path to the module.
+#
+# DISCLAIMER: it was designed ONLY for projects relying on Kitware-Robots for
+# the merging process. It relies on specific formatting of commit's titles
+# and bodys in order to extract the relevant commits and related informations
+# (such as the list of commits and their MR URLs).
+#
+# This command can be used from anywhere in the project tree, even from
+# submodules. It will try to checkout the given submodule to the target commit
+# and commit these changes in the current branch of the parent git project.
+# You will be able to edit the commit message as usual. Note that saving an
+# empty message will abort the bump and reset the submodule to its previous
+# state.
+
+set -e
+
+die () {
+  echo >&2 "$@"
+  exit 1
+}
+
+if [[ "$#" -lt 2 ]]; then
+  die "Usage: git bump <submodule-name> <target-commit>"
+fi
+
+readonly submodule="$1"
+shift
+
+readonly target_commit="$1"
+shift
+
+git_version_check () {
+  local version="$1"
+  readonly version
+  shift
+
+  local reason="$1"
+  readonly reason
+  shift
+
+  local lower_version
+  lower_version="$( (
+    echo "$version"
+    git --version | sed -e 's/git version //'
+  ) | sort -V | head -n1 )"
+  readonly lower_version
+
+  if [ "$lower_version" != "$version" ]; then
+    die "Git version $version needed for $reason"
+  fi
+}
+
+git_version_check "2.31.0" "rev-parse --path-format="
+
+# go to root path
+root_path="$( git rev-parse --show-superproject-working-tree )"
+if [[ -z "$root_path" ]]; then
+  root_path="$( git rev-parse --show-toplevel )"
+fi
+readonly root_path
+cd "$root_path"
+
+# Find informations about the submodule
+if git config --local "submodule.$submodule.url" >/dev/null 2>/dev/null; then
+  submodule_name="$submodule"
+  url="$( git config --local --get "submodule.$submodule.url" )"
+else
+  config="$( git config --local --get-regexp "submodule\..*$submodule.*\.url" )"
+  readonly config
+  # Extract out the submodule name and URL from the configuration line.
+  submodule_name="${config//.url */}"
+  submodule_name="${submodule_name//submodule./}"
+  url="${config//* /}"
+  n_match="$( echo  "$config" | wc -l | tr -d ' ' )"
+  readonly n_match
+  if [[ "$n_match" != "1" ]]; then
+    die "Submodule name ambiguous, aborting"
+  fi
+fi
+readonly submodule_name
+readonly url
+
+if [[ -z "$submodule_name" ]] || [[ -z "$url" ]]; then
+  die "Submodule not found\nUsage: git bump <submodule-name> <target-commit>"
+fi
+
+submodule_path="$( git config -f .gitmodules "submodule.$submodule_name.path" )"
+readonly submodule_path
+if [[ -n "$( git status --short -- "$submodule_path" )" ]]; then
+  die "Submodule is not in a clean state, please make sure it is in a clean state before using the command"
+fi
+
+submodule_xref="$( echo "$url" | sed -e 's,https://[^/]*/\(.*\),\1,;s/\.git$//' )"
+readonly submodule_xref
+
+# ensure commit is reachable localy
+git -C "$submodule_path" fetch origin "$target_commit"
+
+# construct resulting log
+fphistory="$( git \
+  -C "$submodule_path" \
+  log \
+  --first-parent \
+  --grep="Merge topic" \
+  --format=format:"* %an: %s ($submodule_xref%(trailers:key=Merge-request,separator=,valueonly))" \
+  HEAD.."$target_commit" \
+  | sed -e "/Merge topic/s/Merge topic '\(.*\)'/\1/" )"
+readonly fphistory
+
+# construct resulting commit message
+template="$( cat <<EOF
+$submodule_name: <SHORT REASON FOR THIS BUMP>
+
+# <LONG REASON FOR THIS BUMP>
+
+$fphistory
+EOF
+)"
+readonly template
+
+# Save template in file. Get the actual git dir, whenever using worktrees
+git_dir_path="$( git rev-parse --path-format=absolute --git-common-dir )"
+readonly git_dir_path
+tmp_file="$( mktemp "$git_dir_path"/bump.XXXXXX )"
+readonly tmp_file
+trap 'rm -f -- "$tmp_file"' EXIT
+echo "$template" > "$tmp_file"
+
+# try committing
+git -C "$submodule_path" checkout "$target_commit"
+git -C "$submodule_path" submodule update --recursive
+git add "$submodule_path"
+# restore state if commit failed
+if ! git commit -eF "$tmp_file"; then
+  git reset "$submodule_path"
+  git submodule update --recursive -- "$submodule_path"
+fi

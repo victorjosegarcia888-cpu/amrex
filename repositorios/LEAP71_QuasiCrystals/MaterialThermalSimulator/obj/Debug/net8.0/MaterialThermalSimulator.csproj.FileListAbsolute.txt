@@ -1,0 +1,15 @@
+/workspaces/LEAP71_QuasiCrystals/MaterialThermalSimulator/bin/Debug/net8.0/MaterialThermalSimulator
+/workspaces/LEAP71_QuasiCrystals/MaterialThermalSimulator/bin/Debug/net8.0/MaterialThermalSimulator.deps.json
+/workspaces/LEAP71_QuasiCrystals/MaterialThermalSimulator/bin/Debug/net8.0/MaterialThermalSimulator.runtimeconfig.json
+/workspaces/LEAP71_QuasiCrystals/MaterialThermalSimulator/bin/Debug/net8.0/MaterialThermalSimulator.dll
+/workspaces/LEAP71_QuasiCrystals/MaterialThermalSimulator/bin/Debug/net8.0/MaterialThermalSimulator.pdb
+/workspaces/LEAP71_QuasiCrystals/MaterialThermalSimulator/obj/Debug/net8.0/MaterialThermalSimulator.GeneratedMSBuildEditorConfig.editorconfig
+/workspaces/LEAP71_QuasiCrystals/MaterialThermalSimulator/obj/Debug/net8.0/MaterialThermalSimulator.AssemblyInfoInputs.cache
+/workspaces/LEAP71_QuasiCrystals/MaterialThermalSimulator/obj/Debug/net8.0/MaterialThermalSimulator.AssemblyInfo.cs
+/workspaces/LEAP71_QuasiCrystals/MaterialThermalSimulator/obj/Debug/net8.0/MaterialThermalSimulator.csproj.CoreCompileInputs.cache
+/workspaces/LEAP71_QuasiCrystals/MaterialThermalSimulator/obj/Debug/net8.0/MaterialThermalSimulator.sourcelink.json
+/workspaces/LEAP71_QuasiCrystals/MaterialThermalSimulator/obj/Debug/net8.0/MaterialThermalSimulator.dll
+/workspaces/LEAP71_QuasiCrystals/MaterialThermalSimulator/obj/Debug/net8.0/refint/MaterialThermalSimulator.dll
+/workspaces/LEAP71_QuasiCrystals/MaterialThermalSimulator/obj/Debug/net8.0/MaterialThermalSimulator.pdb
+/workspaces/LEAP71_QuasiCrystals/MaterialThermalSimulator/obj/Debug/net8.0/MaterialThermalSimulator.genruntimeconfig.cache
+/workspaces/LEAP71_QuasiCrystals/MaterialThermalSimulator/obj/Debug/net8.0/ref/MaterialThermalSimulator.dll

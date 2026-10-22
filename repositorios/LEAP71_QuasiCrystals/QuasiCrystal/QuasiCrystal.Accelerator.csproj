@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Leap71.QuasiCrystal.Accelerator</AssemblyName>
+    <RootNamespace>Leap71.AperiodicTiling</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- PicoGK and ShapeKernel are expected to be referenced by the consuming project -->
+  </ItemGroup>
+
+</Project>

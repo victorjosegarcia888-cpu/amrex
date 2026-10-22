@@ -1,0 +1,164 @@
+{
+  "name": "FFSC Noyron Generative Engine Pipeline with FractalKernel",
+  "description": "Grafo completo de motor FFSC generativo basado en nodos grandes volumétricos con agentes internos, incluyendo post-procesamiento fractal y manifold orgánico",
+  "version": "2.0.0",
+  "configPath": "FFSC-PicoGK/config/engine_params.json",
+  "nodes": [
+    {
+      "id": "CamaraCombustion",
+      "name": "Nodo Cámara de Combustión",
+      "taskType": "FFSC_PicoGK.Nodes.Noyron.Nodo_CamaraCombustion",
+      "dependsOn": [],
+      "input": null,
+      "outputKey": "chamber_voxels",
+      "classification": "node",
+      "inputTypes": ["Unit"],
+      "outputTypes": ["Voxels"]
+    },
+    {
+      "id": "PreBurner",
+      "name": "Nodo PreBurner",
+      "taskType": "FFSC_PicoGK.Nodes.Noyron.Nodo_PreBurner",
+      "dependsOn": [],
+      "input": null,
+      "outputKey": "preburner_voxels",
+      "classification": "node",
+      "inputTypes": ["Unit"],
+      "outputTypes": ["Voxels"]
+    },
+    {
+      "id": "ManifoldPrincipal",
+      "name": "Nodo Manifold Principal",
+      "taskType": "FFSC_PicoGK.Nodes.Noyron.Nodo_ManifoldPrincipal",
+      "dependsOn": [],
+      "input": null,
+      "outputKey": "manifold_voxels",
+      "classification": "node",
+      "inputTypes": ["Unit"],
+      "outputTypes": ["Voxels"]
+    },
+    {
+      "id": "Turbobomba",
+      "name": "Nodo Turbobomba",
+      "taskType": "FFSC_PicoGK.Nodes.Noyron.Nodo_Turbobomba",
+      "dependsOn": [],
+      "input": null,
+      "outputKey": "turbopump_voxels",
+      "classification": "node",
+      "inputTypes": ["Unit"],
+      "outputTypes": ["Voxels"]
+    },
+    {
+      "id": "CamposFisicos",
+      "name": "Nodo Campos Físicos",
+      "taskType": "FFSC_PicoGK.Nodes.Noyron.Nodo_CamposFisicos",
+      "dependsOn": ["CamaraCombustion", "PreBurner", "ManifoldPrincipal", "Turbobomba"],
+      "input": {},
+      "outputKey": "physics_fields",
+      "classification": "node",
+      "inputTypes": ["CamposFisicosInput"],
+      "outputTypes": ["Voxels"]
+    },
+    {
+      "id": "CoolingRegenerativo",
+      "name": "Nodo Cooling Regenerativo",
+      "taskType": "FFSC_PicoGK.Nodes.Noyron.Nodo_CoolingRegenerativo",
+      "dependsOn": ["CamaraCombustion", "PreBurner", "CamposFisicos"],
+      "input": {},
+      "outputKey": "cooling_voxels",
+      "classification": "node",
+      "inputTypes": ["CoolingRegenerativoInput"],
+      "outputTypes": ["Voxels"]
+    },
+    {
+      "id": "LatticeAdaptativo",
+      "name": "Nodo Lattice Adaptativo",
+      "taskType": "FFSC_PicoGK.Nodes.Noyron.Nodo_LatticeAdaptativo",
+      "dependsOn": ["CamaraCombustion", "PreBurner", "CamposFisicos"],
+      "input": {},
+      "outputKey": "lattice_voxels",
+      "classification": "node",
+      "inputTypes": ["LatticeAdaptativoInput"],
+      "outputTypes": ["Voxels"]
+    },
+    {
+      "id": "OrganicManifold",
+      "name": "Nodo Organic Manifold",
+      "taskType": "FFSC_PicoGK.Nodes.Noyron.Nodo_OrganicManifold",
+      "dependsOn": ["ManifoldPrincipal"],
+      "input": {},
+      "outputKey": "organic_manifold_voxels",
+      "classification": "node",
+      "inputTypes": ["OrganicManifoldInput"],
+      "outputTypes": ["Voxels"]
+    },
+    {
+      "id": "FractalPostProcess",
+      "name": "Nodo Fractal Post Process",
+      "taskType": "FFSC_PicoGK.Nodes.Noyron.Nodo_FractalPostProcess",
+      "dependsOn": [
+        "CamaraCombustion",
+        "PreBurner",
+        "ManifoldPrincipal",
+        "Turbobomba",
+        "CoolingRegenerativo",
+        "LatticeAdaptativo",
+        "CamposFisicos",
+        "OrganicManifold"
+      ],
+      "input": {},
+      "outputKey": "fractal_postprocess_voxels",
+      "classification": "node",
+      "inputTypes": ["FractalPostProcessInput"],
+      "outputTypes": ["Voxels"]
+    },
+    {
+      "id": "AssemblyFFSC",
+      "name": "Nodo Assembly FFSC",
+      "taskType": "FFSC_PicoGK.Nodes.Noyron.Nodo_AssemblyFFSC",
+      "dependsOn": ["FractalPostProcess"],
+      "input": {},
+      "outputKey": "engine_ffsc",
+      "classification": "node",
+      "inputTypes": ["AssemblyFFSCInput"],
+      "outputTypes": ["Voxels"]
+    },
+    {
+      "id": "VisualizarMotor",
+      "name": "Nodo Visualizar Motor",
+      "taskType": "FFSC_PicoGK.Nodes.Noyron.Nodo_VisualizarMotor",
+      "dependsOn": ["AssemblyFFSC"],
+      "input": {},
+      "outputKey": "visualization_output",
+      "classification": "node",
+      "inputTypes": ["VisualizarMotorInput"],
+      "outputTypes": ["Voxels"]
+    }
+  ],
+  "outputNodes": ["VisualizarMotor"],
+  "graph": {
+    "edges": [
+      {"from": "CamaraCombustion", "to": "CamposFisicos"},
+      {"from": "CamaraCombustion", "to": "CoolingRegenerativo"},
+      {"from": "CamaraCombustion", "to": "LatticeAdaptativo"},
+      {"from": "CamaraCombustion", "to": "FractalPostProcess"},
+      {"from": "PreBurner", "to": "CamposFisicos"},
+      {"from": "PreBurner", "to": "CoolingRegenerativo"},
+      {"from": "PreBurner", "to": "LatticeAdaptativo"},
+      {"from": "PreBurner", "to": "FractalPostProcess"},
+      {"from": "ManifoldPrincipal", "to": "CamposFisicos"},
+      {"from": "ManifoldPrincipal", "to": "OrganicManifold"},
+      {"from": "ManifoldPrincipal", "to": "FractalPostProcess"},
+      {"from": "Turbobomba", "to": "CamposFisicos"},
+      {"from": "Turbobomba", "to": "FractalPostProcess"},
+      {"from": "CamposFisicos", "to": "CoolingRegenerativo"},
+      {"from": "CamposFisicos", "to": "LatticeAdaptativo"},
+      {"from": "CamposFisicos", "to": "FractalPostProcess"},
+      {"from": "CoolingRegenerativo", "to": "FractalPostProcess"},
+      {"from": "LatticeAdaptativo", "to": "FractalPostProcess"},
+      {"from": "OrganicManifold", "to": "FractalPostProcess"},
+      {"from": "FractalPostProcess", "to": "AssemblyFFSC"},
+      {"from": "AssemblyFFSC", "to": "VisualizarMotor"}
+    ]
+  }
+}

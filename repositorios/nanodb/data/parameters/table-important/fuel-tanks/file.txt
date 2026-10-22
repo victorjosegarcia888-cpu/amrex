@@ -1,0 +1,306 @@
+TABLE 3-4.-16K A-3 Stage Engine Operating Parameters
+[Vacuum conditions]
+EngIne (pressurized gas-feed):
+Thrust ..
+Nominal total muViple-firing
+duration ...
+Specific impulse.
+OxidIzer LF 2:
+Density ...
+Flow rate.
+Fuel LH2:
+Density
+Flow rate.
+MIxture ratio.
+· .lb ... 16000
+· . sec. . . .. 300
+· . sec. . .. 446
+· lb 'ftl. 9416
+· . lb.' sec. . 30.78
+· .lb /ft3.. 4.42
+.lb/sec. 5.13
+· .O/F ........... 6
+Thrust chamber (solid wall film cooled by fuel and radiation cooled on nozzle extension):
+Thrust.
+Specific impulse ..
+Injector end pressure.
+Nozzle stagnation pressure ..
+OXIdizer now rate.
+· .lb ..
+· sec
+psia.
+· . PSla
+.. lb/sec.
+. 16000
+.. .. 446
+. .. 110
+100
+30.78
+Fuel now rate. ...... . lb/sec.. 5.13
+Mixture ratio. . . . . .. .'
+c* efficiency.
+c* .
+C, efficiency ..
+C, ...
+Contraction ratio
+Expansion ratio ..
+Throat area At ..
+L*.
+Nozzle contour ...
+Thrust vector control:
+Minimum acceleration ..
+Maximum velocity .....
+Displacement.
+· O/F ........... 6
+· Percent. 98
+· . ftlsec 7910
+... Percent. . 102
+.. Ac/A [ .. '
+.. Ae/At
+1.817
+... 2
+.... 35
+..... 88
+..... 28
+in 2
+· in.
+.. 70 percent
+bell
+· radl sec 2 ....... 2
+· . deg/sec ....... 15
+· . deg .......... ' ±7
+OXIdizer side (pressurized by heated helium):
+Injector pressure drop ....
+Oxidizer dome pressure drop
+Main valve pressure drop
+Line pressure drop ..
+.. psi
+· pSI.
+· psi.
+pSI ..
+approximately 5130 pounds dry, 37900 pounds
+wet, and 5530 pounds at burnout.
+System Operation
+25
+.5
+8
+5
+The A-3 propulsion system is designed for
+automatic start, on receipt of a signal from the
+guidance system. A similar signal effects automatic engine shutdown. One or more restarts can
+be made by merely sending additional start and
+shutdown signals to the propulsion system.
+CalibratIOn orifice pressure drop. .. psi ..
+Oxidizer tank pressure. . psia.
+Total oxidizer weight (300 sec
+duratIOn for 3 engines. plus
+1 percent reSidual) . .lb.
+Oxidizer tank volume (including
+3 percent ullage volume) . · . ft3.
+Pressurant (helium) now rate
+(assuming tank gas temperature
+400 0 R)
+Total pressurant weight (including
+other reqUlrements in the system)
+(assume storage bottle final pressure 350 psi. plus 2 percent
+reserve).
+Pressurant storage tank. volume
+(assume 200 0 R storage temperature, including 3 percent
+· . lb/sec .
+· .lb ..
+. 17
+170
+.. 27950
+. .... 305
+.. 0.1555
+. ..... 60
+ullage volume). . ............ ft3. . .. . . . .. 7.35
+Pressurant storage tank. initial
+pressure . · . psia ........ 4500
+Fuel side (pressurized by heated hydrogen):
+Injector pressure drop. . . psi.
+Inlet manifold pressure drop.. . .... psi ..
+Main valve pressure drop ..... psi .
+Line pressure drop. . ...... psi .
+Fuel tank pressure. . . . psia .
+Total fuel weight (300 sec duration
+for 3 engines. plus 1 percent
+residual) . . . .... lb ..
+Fuel tank volume (mcluding 3 per-
+.. 25
+. .. 10
+.. 10
+.. 5
+160
+. ... 4660
+cent ullage volume). . . . . . f[3 .......... 1087
+Pressurarit (hydrogen) now rate
+(assuming tank vapor temperature
+300° R) . .lb/sec. . .. 0.346
+Total pressurant weight (assuming
+storage bottle fmal pressure 350
+pSla. plus 4 percent reserve) " .lb. . . 108
+Pressurant storage tank. volume
+(liqUId hydrogen including 3
+percent ullage volume) .. . ft 3 .... 25.2
+Pressurant storage tank, pressure ... psi a . " 350
+Figure 3-8 shows the operational sequence of the
+A-3 stage engine. In conjunction with figure 3-6,
+this illustrates the system starting and shutdown
+operations.
+3.5 A-4 STAGE ENGINE
+For the A-4 stage, two engines of 7500-
+pound thrust each were selected, for a combined
+thrust of 15 000 pounds. It is assumed that the
+mission assigned to this fourth and last stage of 
+
+Regression rate
+In contrast to solid rocket motors, hybrids exhibit significant dependence on the size of the port and low dependence on chamber pressure under normal conditions.[2] Because they are dominated by thermodynamic forces, models typically emerge via a heat transfer calculation. Marxman provided the first attempt at an a priori model of hybrid regression, basing the rate on a heat transfer equilibrium calculation and assuming unity for the Prandtl and Lewis numbers.[3] He eventually developed the below equation, using 
+G
+{\displaystyle G} for instantaneous local mass flux, 
+x
+{\displaystyle x} as distance along the port, 
+ρ
+f
+{\displaystyle \rho _{f}} for density of the fuel, 
+μ
+{\displaystyle \mu } for viscosity of the main-stream gas flow, 
+u
+e
+/
+u
+c
+{\displaystyle u_{e}/u_{c}} for the velocity ratio between gas in the main stream and gas at the flame, and 
+Δ
+h
+/
+h
+v
+{\displaystyle \Delta h/{h_{v}}} for the ratio considering the enthalpy difference from flame to fuel surface (
+Δ
+h
+{\displaystyle \Delta h}) in comparison to the effective heat of vaporization (
+h
+v
+{\displaystyle h_{v}}) for the fuel.
+r
+˙
+=
+0.036
+G
+ρ
+f
+(
+G
+x
+μ
+)
+−
+0.2
+(
+u
+e
+u
+c
+Δ
+h
+h
+v
+)
+0.23
+{\displaystyle {\dot {r}}={\frac {0.036G}{\rho _{f}}}{({\frac {Gx}{\mu }})}^{-0.2}{({\frac {u_{e}}{u_{c}}}{\frac {\Delta h}{h_{v}}})}^{0.23}}Though the model showed large errors when used to predict regression rate for an annular port,[3] the strong dependence on flux was a key finding. Unfortunately, many components of the equation are extremely difficult to determine, so most engineers focused on developing models based on testing, fitting the regression rate to a power function by effectively combining most of the terms into one coefficient that is assumed constant throughout the burn. It was typically simplified into a basic equation by considering the average regression over time for a test, fitting coefficients 
+a
+{\displaystyle a}, 
+n
+{\displaystyle n} and 
+m
+{\displaystyle m} based on regression testing.
+r
+˙
+=
+a
+G
+n
+x
+m
+{\displaystyle {\dot {r}}=a{G}^{n}x^{m}}Where G is the mass flux of propellant and x is the distance along the fuel grain. Though Marxman's initial math indicates that 
+n
+=
+0.8
+{\displaystyle n=0.8} and 
+m
+=
+−
+0.2
+{\displaystyle m=-0.2}, data typically ranges from 0.5 to 0.8 for 
+n
+{\displaystyle n} and usually shows less dependence than predicted on 
+x
+{\displaystyle x}. By averaging the regression out over the length of the fuel grain, the commonly used space-time average regression equation is created (also typically using 
+G
+o
+{\displaystyle G_{o}}, the flux of oxidizer, for the flux term instead of 
+G
+{\displaystyle G} for flux of oxidizer and fuel).
+r
+˙
+=
+a
+G
+o
+n
+{\displaystyle {\dot {r}}=a{G_{o}}^{n}}Many alternative equations for regression rate have been derived, usually constructed by reconsidering the assumptions made by Marxman but using the same diffusion-limited calculation approach. A model published by Karabeyoglu, for example, provides a more accurate approach by considering variation in the Prandtl number, accounting for entrance effects in the Reynolds number, and moving the flame sheet location to the stoichiometric location.[3]
+
+Similar concepts can be seen in an extension by Whitmore, where the Prandtl number is approximated as 0.8 and the skin friction coefficient is recalculated to consider blowing and the flow development along the grain length.[4]
+
+Both improved formulas appear to show a better relationship with tested data.Regression enhancements
+Liquifying fuels
+The simplest technique for increasing the regression rate is to use a different fuel. Solids with lower molecular masses tend to have lower viscosities, a quality which generally correlates with a decrease in the required energy for gasification. Taken to the extreme, a new phenomenon actually emerges, where a melt layer at the surface of the fuel allows droplets to be entrained as oxidizer flows past. At the flux levels commonly seen in hybrid rocketry, this entrainment actually accounts for the largest portion of regression (dominating vaporization).[5]
+
+The concept was originally discovered during a brief research period in which AFRL and Orbital Technologies Corporation (ORBITEC) tested several cryogenic fuels in an effort to increase specific impulse. Using solidified pentane, they found regression rates vastly increased over traditional hybrid fuels.[5] Several tests with paraffin also foreshadowed modern liquifying rocket technology, with the Peregrine rocket among others leading the way for further development.[6][7][8]
+
+The alternative regression method does supply some other issues, mainly a reduction in combustion efficiency. Because of the large particle size, the entrained droplets may not be fully consumed before flowing out of the nozzle and leaving the engine. Indeed, paraffin has a tendency to even slough off large fragments, greatly reduces combustion efficiency and potentially contributing to combustion instability.[9]
+
+Complex geometry
+Although it is much harder to predict, complex grain geometries offer another technique for increasing regression rate and burn area in order to greatly increase fuel flow.
+
+Using non-circular port cross sections increases the area exposed to the oxidizer to be gasified, especially at the start of the burn. However, as the fuel continues to regress it will begin to round out the shape because regression generally occurs normal to the fuel’s surface, and corners tend to regress faster. Generally, this will cause the O/F ratio to shift away from stoichiometric.
+
+Some of the first attempts at complex geometries were wagon wheel designs developed by the United Technology Center.[10] Though they massively increase fuel flow, wagon wheels require that a significant portion of fuel is left behind, or the structure could break apart.
+
+More recently, helical designs have been used to create a centripetal component of flow, reducing blowing and providing greater friction between the oxidizer and fuel in order to increase convection. Analysis at the University of Utah concluded that regression rates generally increased by at least a factor of two, up to even a factor of four.[11] In general, helical regression rate is modeled by several multiplicative adjustments to the skin friction coefficient and to the blowing coefficient.[10]
+
+Burn area
+The burn area refers to the surface exposed to the heat of the combustion chamber, and it is just as pivotal to the regression of the rocket as the regression rate itself, since the volume flow rate of fuel is usually given by the regression rate multiplied by the burn area. Depending on the complexity of the grain geometry, it can also be quite difficult to calculate. At its simplest form, a tube-shaped fuel grain has a burn area of 
+π
+∗
+D
+∗
+l
+{\displaystyle \pi *D*l} added to the area on both ends. However, a star-shaped fuel grain could require the use of CAD or other geometric software to determine the surface area, particularly as the surface area regresses along the normals, often creating highly irregular geometry.
+
+
+Bath's regression algorithm begins with a cross section of the port, blurs it, then converts back to black and white based on a threshold.
+In fact, the process is even slightly more complicated because corners protruding into the combustion chamber will regress more quickly than their circular counterparts, since they are exposed to heat on both sides. To model the problem, Bath developed a technique of iteratively blurring pixels and removing those that fall below a certain threshold of brightness.[10] Using the image processing to generate a table of surface area outputs for a given volume, it can easily be implemented into a model for regression of the fuel grain over time.
+
+Unfortunately, most models still require an empirical factor that depends on variations in fuel and oxidizer flow paths for different port geometries. In the case of the image blurring model, predictions of regression are also dependent on the settings used in the image processing program.
+
+Models of burn area based on 2D cross sections lose another component of accuracy because they assume regression in the radial direction. For a helical grain, for example, the burn area predicted by Bath's model would be incorrect.
+Regression testing
+Because of the lack of accurate prediction methods, each system should generally be tested in full configuration to accurately determine the regression rate before flight. Typically, data points for several identical grains tested under different flux conditions are fitted to the space-time averaged power function. Initially, methods for fitting the power function were often left ambiguous in publications due to variation in the possible calculations for average mass flux, making it difficult to compare findings. A now commonly-referenced study by Karabeyoglu indicates that the easiest measurement, the port diameter average, also provides the most accurate results.[12]
+
+Space-Time Averaged Regression Coefficients
+Ox	Fuel	
+a
+{\displaystyle a}	
+n
+{\displaystyle n}	Source
+LOX	HTPB	0.03043	0.681	[13]
+LOX	HDPE	0.0234	0.620	[13]
+GOX	HDPE	0.042	0.498	[3]
+GOX	ABS	0.0128	0.524	[14]
+GOX	ABS	0.166	0.46	[15]
+GOX	PMMA	0.0211	0.615	[3]
+N2O	HTPB	0.0255	0.679	[16]
+N2O	HTPB	0.1876	0.347	[17]
+N2O	ABS	0.038	0.5	[18]

@@ -1,0 +1,19 @@
+{
+  "name": "LEAP71 QuasiCrystals Dev Environment",
+  "image": "mcr.microsoft.com/devcontainers/dotnet:1-8.0-jammy",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "dotnet.defaultSolution": "*.sln",
+        "editor.formatOnSave": true
+      },
+      "extensions": [
+        "ms-dotnettools.csharp",
+        "ms-dotnettools.csdevkit",
+        "GitHub.copilot",
+        "GitHub.copilot-chat"
+      ]
+    }
+  },
+  "postCreateCommand": "dotnet restore"
+}

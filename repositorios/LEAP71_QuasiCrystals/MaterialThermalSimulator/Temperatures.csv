@@ -1,0 +1,22 @@
+node,temperature,material,density,specificHeat,conductivity
+0,2200,Reactive Skin,7800,520,6
+1,447.57858,Reactive Skin,7800,520,6
+2,299.95438,Reactive Skin,7800,520,6
+3,293.35825,Reactive Skin,7800,520,6
+4,293.15475,Reactive Skin,7800,520,6
+5,293.15,Transition Zone,5200,700,4
+6,293.15,Transition Zone,5200,700,4
+7,293.15,Transition Zone,5200,700,4
+8,293.15,Transition Zone,5200,700,4
+9,293.15,Transition Zone,5200,700,4
+10,293.15,Transition Zone,5200,700,4
+11,293.15,Transition Zone,5200,700,4
+12,293.15,Transition Zone,5200,700,4
+13,293.15,Transition Zone,5200,700,4
+14,293.15,Core Lattice,3200,900,2.5
+15,293.15,Core Lattice,3200,900,2.5
+16,293.15,Core Lattice,3200,900,2.5
+17,293.15,Core Lattice,3200,900,2.5
+18,293.15,Core Lattice,3200,900,2.5
+19,293.15,Core Lattice,3200,900,2.5
+20,293.15,Core Lattice,3200,900,2.5

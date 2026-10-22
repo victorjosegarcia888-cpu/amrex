@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="src/PicoGK.Geometry/PicoGK.Geometry.csproj" />
+  <Project Path="tests/PicoGK.Geometry.Tests/PicoGK.Geometry.Tests.csproj" />
+</Solution>

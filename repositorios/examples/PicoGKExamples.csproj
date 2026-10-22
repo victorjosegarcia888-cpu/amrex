@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="PicoGK" Version="1.7.7.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="config\*.json" />
+    <None Include="docs\**\*.md" />
+    <None Include="*.sh" />
+    <None Include="Pipeline\*.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="01_GettingStarted\**\*.cs" />
+    <Compile Remove="FFSC-PicoGK\FFSC_PicoGK.TestRunner\**\*.cs" />
+    <Compile Remove="GeometryII\**\*.cs" />
+    <Compile Remove="rocket\**\*.cs" />
+    <Compile Remove="analysis\**\*.cs" />
+    <Compile Remove="ShapeKernel\**\*.cs" />
+    <Compile Remove="Complex_rocket\**\*.cs" />
+    <Compile Remove="other_file\**\*.cs" />
+    <None Include="FFSC-PicoGK\**\*.json" />
+    <None Include="FFSC-PicoGK\**\*.md" />
+    <None Include="FFSC-PicoGK\**\*.sh" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,232 @@
+name: Build PicoGK.Geometry
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build, test and pack
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Compute package version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            version="${GITHUB_REF_NAME#v}"
+          else
+            version="1.0.0-0.internal.${GITHUB_RUN_ID}.${GITHUB_RUN_ATTEMPT}"
+          fi
+
+          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$ ]]; then
+            echo "Invalid package version: $version"
+            exit 1
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Restore
+        run: >-
+          dotnet restore tests/PicoGK.Geometry.Tests/PicoGK.Geometry.Tests.csproj
+          -p:Version="${{ steps.version.outputs.version }}"
+
+      - name: Build
+        run: >-
+          dotnet build tests/PicoGK.Geometry.Tests/PicoGK.Geometry.Tests.csproj
+          -c Release
+          --no-restore
+          -p:Version="${{ steps.version.outputs.version }}"
+          -p:ContinuousIntegrationBuild=true
+
+      - name: Test
+        run: >-
+          dotnet test tests/PicoGK.Geometry.Tests/PicoGK.Geometry.Tests.csproj
+          -c Release
+          --no-build
+          -p:Version="${{ steps.version.outputs.version }}"
+          -p:ContinuousIntegrationBuild=true
+
+      - name: Pack
+        run: >-
+          dotnet pack src/PicoGK.Geometry/PicoGK.Geometry.csproj
+          -c Release
+          --no-build
+          -p:Version="${{ steps.version.outputs.version }}"
+          -p:ContinuousIntegrationBuild=true
+          -o artifacts/packages
+
+      - name: Verify package
+        shell: bash
+        env:
+          PACKAGE_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os
+          import pathlib
+          import sys
+          import zipfile
+
+          version = os.environ['PACKAGE_VERSION']
+          package = pathlib.Path(f'artifacts/packages/PicoGK.Geometry.{version}.nupkg')
+          if not package.is_file():
+              print(f'Missing expected package: {package}')
+              sys.exit(1)
+
+          with zipfile.ZipFile(package) as archive:
+              names = set(archive.namelist())
+
+          expected = 'lib/net10.0/PicoGK.Geometry.dll'
+          if expected not in names:
+              print(f'Missing expected package entry: {expected}')
+              sys.exit(1)
+          PY
+
+      - name: Upload NuGet package
+        uses: actions/upload-artifact@v7
+        with:
+          name: PicoGK.Geometry-NuGet
+          path: artifacts/packages/*.nupkg
+          if-no-files-found: error
+
+  package-test:
+    name: Test NuGet package
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Download NuGet package
+        uses: actions/download-artifact@v8
+        with:
+          name: PicoGK.Geometry-NuGet
+          path: artifacts/packages
+
+      - name: Restore package consumer test
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          packages=(artifacts/packages/*.nupkg)
+          if [[ ${#packages[@]} -ne 1 ]]; then
+            echo "Expected exactly one .nupkg, found ${#packages[@]}."
+            exit 1
+          fi
+
+          package_name=$(basename "${packages[0]}" .nupkg)
+          version=${package_name#PicoGK.Geometry.}
+          packages_dir="$PWD/.package-test/nuget"
+          config="$PWD/.package-test/NuGet.config"
+          rm -rf "$packages_dir"
+          mkdir -p "$(dirname "$config")"
+
+          echo "PACKAGES_DIR=$packages_dir" >> "$GITHUB_ENV"
+          echo "PICOGK_GEOMETRY_PACKAGE_VERSION=$version" >> "$GITHUB_ENV"
+
+          cat > "$config" <<EOF
+          <?xml version="1.0" encoding="utf-8"?>
+          <configuration>
+            <packageSources>
+              <clear />
+              <add key="local" value="$GITHUB_WORKSPACE/artifacts/packages" />
+              <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+            </packageSources>
+            <packageSourceMapping>
+              <packageSource key="local">
+                <package pattern="PicoGK.Geometry" />
+              </packageSource>
+              <packageSource key="nuget.org">
+                <package pattern="*" />
+              </packageSource>
+            </packageSourceMapping>
+          </configuration>
+          EOF
+
+          dotnet restore tests/PicoGK.Geometry.PackageTests/PicoGK.Geometry.PackageTests.csproj \
+            --configfile "$config" \
+            -p:RestorePackagesPath="$packages_dir" \
+            -p:PicoGKGeometryPackageVersion="$version"
+
+      - name: Run package consumer test
+        shell: bash
+        run: >-
+          dotnet test tests/PicoGK.Geometry.PackageTests/PicoGK.Geometry.PackageTests.csproj
+          -c Release
+          --no-restore
+          -p:RestorePackagesPath="$PACKAGES_DIR"
+          -p:PicoGKGeometryPackageVersion="$PICOGK_GEOMETRY_PACKAGE_VERSION"
+
+  publish:
+    name: Publish to NuGet.org
+    needs: package-test
+    if: >-
+      github.event_name == 'push' &&
+      github.ref_type == 'tag' &&
+      startsWith(github.ref_name, 'v') &&
+      github.repository == 'leap71/PicoGK.Geometry'
+    runs-on: ubuntu-latest
+    environment: release
+    concurrency:
+      group: nuget-${{ github.ref }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: PicoGK.Geometry-NuGet
+          path: artifacts/packages
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Select package
+        id: package
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          packages=(artifacts/packages/*.nupkg)
+          if [[ ${#packages[@]} -ne 1 ]]; then
+            echo "Expected exactly one .nupkg, found ${#packages[@]}."
+            exit 1
+          fi
+          echo "path=${packages[0]}" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to NuGet.org
+        id: nuget-login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ vars.NUGET_USER }}
+
+      - name: Push package
+        env:
+          NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
+          PACKAGE_PATH: ${{ steps.package.outputs.path }}
+        run: >-
+          dotnet nuget push "$PACKAGE_PATH"
+          --source https://api.nuget.org/v3/index.json
+          --api-key "$NUGET_API_KEY"

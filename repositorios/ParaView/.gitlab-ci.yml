@@ -1,0 +1,372 @@
+---
+spec:
+    inputs:
+        project-tag:
+            default: "paraview"
+            description: "The project tag to use for selecting runners"
+            options:
+                - "paraview"
+                # Use when deploying a new machine to test that it is working
+                # properly before adding it to the main pool.
+                - "__paraview"
+
+---
+include:
+    # Metadata shared my many jobs
+    - local: .gitlab/rules.yml
+    - local: .gitlab/artifacts.yml
+    - local: .gitlab/warning-policy.yml
+
+    # OS builds.
+    - local: .gitlab/os-linux.yml
+      inputs:
+          project-tag: $[[ inputs.project-tag ]]
+    - local: .gitlab/os-macos.yml
+      inputs:
+          project-tag: $[[ inputs.project-tag ]]
+    - local: .gitlab/os-windows.yml
+      inputs:
+          project-tag: $[[ inputs.project-tag ]]
+
+stages:
+    - build
+    - test
+
+################################################################################
+# Job declarations
+#
+# Each job must pull in each of the following keys:
+#
+#   - a "base image"
+#   - a build script
+#   - tags for the jobs
+#     - already provided for upload and CI update jobs
+#   - the `.rules` block
+#     - see `.gitlab/rules.yml` for variables jobs may set to control when the
+#       job is executed
+#
+# Additionally, jobs may also contain:
+#
+#   - artifacts
+#   - needs jobs for required jobs
+################################################################################
+
+# Linux
+
+## Spack
+
+# spack-centos7:build:
+#     extends:
+#         - .centos7
+#         - .spack_build_linux
+#         - .linux_builder_tags
+#         - .rules
+#     variables:
+#         PV_CI_MERGED_ONLY: "true"
+#         PV_CI_NIGHTLY_ONLY: "true"
+
+## Linux
+
+el7-mindeps-shared-mpi-qt5:build:
+    extends:
+        - .el7_mindeps_shared_mpi_qt5
+        - .cmake_build_linux
+        - .linux_builder_tags
+        - .cmake_build_artifacts
+        - .rules
+    variables:
+        PV_CI_RUN_MANUALLY: "true"
+
+# Disable testing for now. Even with a modern Mesa and the llvmpipe backend,
+# modern enough OpenGL is just not working in CI. Rather than disabling just
+# about everything in the test suite, just skip testing altogether.
+# el7-mindeps-shared-mpi-qt5:test:
+#     extends:
+#         - .el7_mindeps_shared_mpi_qt5
+#         - .cmake_test_linux
+#         - .linux_tester_tags
+#         - .cmake_test_artifacts
+#         - .rules
+#     needs:
+#         - el7-mindeps-shared-mpi-qt5:build
+
+el8-shared-icc-mpi-python:build:
+    extends:
+        - .el8_shared_icc_mpi_python
+        - .cmake_build_linux
+        - .linux_builder_tags
+        - .cmake_build_artifacts
+        - .rules
+    variables:
+        PV_CI_RUN_MANUALLY: "true"
+
+el8-shared-icc-mpi-python:test:
+    extends:
+        - .el8_shared_icc_mpi_python
+        - .cmake_test_linux
+        - .linux_tester_tags
+        - .cmake_test_artifacts
+        - .rules
+    needs:
+        - el8-shared-icc-mpi-python:build
+
+fedora44-shared-asserts-mpi-python-qt:build:
+    extends:
+        - .fedora44_shared_asserts_mpi_python_qt
+        - .cmake_build_linux
+        - .linux_builder_tags
+        - .cmake_build_artifacts
+        - .rules
+    variables:
+        PV_CI_RUN_MANUALLY: "true"
+    timeout: 90 minutes
+
+fedora44-shared-asserts-mpi-python-qt:test:
+    extends:
+        - .fedora44_shared_asserts_mpi_python_qt
+        - .cmake_test_linux
+        - .linux_tester_tags
+        - .cmake_test_artifacts
+        - .rules
+    needs:
+        - fedora44-shared-asserts-mpi-python-qt:build
+    timeout: 240 minutes
+
+fedora44-shared-mpi-python-qt-viskoresoverride:build:
+    extends:
+        - .fedora44_shared_mpi_python_qt_viskoresoverride
+        - .cmake_build_linux
+        - .linux_builder_tags
+        - .cmake_build_artifacts
+        - .rules
+    variables:
+        PV_CI_RUN_MANUALLY: "true"
+
+fedora44-shared-mpi-python-qt-viskoresoverride:test:
+    extends:
+        - .fedora44_shared_mpi_python_qt_viskoresoverride
+        - .cmake_test_linux
+        - .linux_tester_tags
+        - .cmake_test_artifacts
+        - .rules
+    needs:
+        - fedora44-shared-mpi-python-qt-viskoresoverride:build
+    timeout: 180 minutes
+
+fedora44-shared-mpi-offscreen-osmesa-python-qt-viskoresoverride:test:
+    extends:
+        - .fedora44_shared_mpi_offscreen_osmesa_python_qt_viskoresoverride
+        - .cmake_test_linux
+        - .linux_tester_tags
+        - .cmake_test_artifacts
+        - .rules
+    needs:
+        - fedora44-shared-mpi-python-qt-viskoresoverride:build
+    timeout: 180 minutes
+
+# Translations
+
+translations:test:
+    extends:
+        - .fedora44_shared_asserts_mpi_python_qt
+        - .cmake_translations_linux
+        - .linux_tester_tags
+        - .cmake_translations_artifacts
+        - .rules
+    variables:
+        PV_CI_MERGED_ONLY: "true"
+    needs:
+        - fedora44-shared-asserts-mpi-python-qt:build
+    timeout: 15 minutes
+
+## Catalyst editions
+
+fedora44-shared-mpi-core:build:
+    extends:
+        - .fedora44_shared_mpi_core
+        - .cmake_build_linux
+        - .linux_builder_tags
+        - .cmake_build_artifacts
+        - .rules
+    variables:
+        PV_CI_RUN_MANUALLY: "true"
+
+fedora44-shared-mpi-core:test:
+    extends:
+        - .fedora44_shared_mpi_core
+        - .cmake_test_linux
+        - .linux_tester_tags
+        - .cmake_test_artifacts
+        - .rules
+    needs:
+        - fedora44-shared-mpi-core:build
+
+fedora44-shared-mpi-python-core:build:
+    extends:
+        - .fedora44_shared_mpi_python_core
+        - .cmake_build_linux
+        - .linux_builder_tags
+        - .cmake_build_artifacts
+        - .rules
+    variables:
+        PV_CI_RUN_MANUALLY: "true"
+
+fedora44-shared-mpi-python-core:test:
+    extends:
+        - .fedora44_shared_mpi_python_core
+        - .cmake_test_linux
+        - .linux_tester_tags
+        - .cmake_test_artifacts
+        - .rules
+    needs:
+        - fedora44-shared-mpi-python-core:build
+
+## Static analysis
+
+fedora44-tidy:build:
+    extends:
+        - .fedora44_tidy
+        - .cmake_build_linux
+        - .linux_builder_tags
+        - .cmake_tidy_artifacts
+        - .rules
+    variables:
+        PV_CI_RUN_MANUALLY: "true"
+    # clang-tidy is *really* slow because it isn't cached.
+    timeout: 4 hours
+
+# macOS
+
+macos-arm64-python-qt:build:
+    extends:
+        - .macos_arm64_python_qt
+        - .cmake_build_macos
+        - .macos_arm64_builder_tags
+        - .cmake_build_artifacts
+        - .rules
+    variables:
+        PV_CI_RUN_MANUALLY: "true"
+
+macos-arm64-python-qt:test:
+    extends:
+        - .macos_arm64_python_qt
+        - .cmake_test_macos
+        - .macos_arm64_builder_tags
+        - .cmake_test_artifacts
+        - .rules
+    needs:
+        - macos-arm64-python-qt:build
+    timeout: 180 minutes
+
+macos-x86_64-python-qt:build:
+    extends:
+        - .macos_x86_64_python_qt
+        - .cmake_build_macos
+        - .macos_x86_64_builder_tags
+        - .cmake_build_artifacts
+        - .rules
+    variables:
+        PV_CI_RUN_MANUALLY: "true"
+        PV_CI_MERGED_ONLY: "true"
+        PV_CI_NIGHTLY_ONLY: "true"
+
+macos-x86_64-python-qt:test:
+    extends:
+        - .macos_x86_64_python_qt
+        - .cmake_test_macos
+        - .macos_x86_64_builder_tags
+        - .cmake_test_artifacts
+        - .rules
+    variables:
+        PV_CI_MERGED_ONLY: "true"
+        PV_CI_NIGHTLY_ONLY: "true"
+    needs:
+        - macos-x86_64-python-qt:build
+
+# Windows
+
+windows-vs2022-kits-mpi-python-qt:build:
+    extends:
+        - .windows_vs2022_kits_mpi_python_qt
+        - .cmake_build_windows
+        - .windows_builder_tags
+        - .cmake_build_artifacts
+        - .rules
+    variables:
+        PV_CI_RUN_MANUALLY: "true"
+    timeout: 90 minutes
+
+windows-vs2022-kits-mpi-python-qt:test:
+    extends:
+        - .windows_vs2022_kits_mpi_python_qt
+        - .cmake_test_windows
+        - .windows_test_tags
+        - .cmake_test_artifacts
+        - .rules
+    needs:
+        - windows-vs2022-kits-mpi-python-qt:build
+    timeout: 120 minutes
+
+windows-vs2022-qt:build:
+    extends:
+        - .windows_vs2022_qt
+        - .cmake_build_windows
+        - .windows_builder_tags
+        - .cmake_build_artifacts
+        - .rules
+    variables:
+        PV_CI_RUN_MANUALLY: "true"
+    timeout: 90 minutes
+
+windows-vs2022-qt:test:
+    extends:
+        - .windows_vs2022_qt
+        - .cmake_test_windows
+        - .windows_test_tags
+        - .cmake_test_artifacts
+        - .rules
+    needs:
+        - windows-vs2022-qt:build
+    timeout: 120 minutes
+
+# Deployment
+
+## Documentation
+
+documentation:build:
+    extends:
+        - .fedora44_documentation
+        - .doxygen_build_linux
+        - .linux_builder_tags
+        - .doxygen_log_artifacts
+        - .rules
+    variables:
+        PV_CI_RUN_MANUALLY: "true"
+        PV_CI_NIGHTLY_ONLY: "true"
+
+fedora44-doxygen:build:
+    extends:
+        - .fedora44_doxygen
+        - .cmake_build_linux
+        - .linux_builder_tags
+        - .cmake_doxygen_artifacts
+        - .rules
+    variables:
+        PV_CI_RUN_MANUALLY: "true"
+
+# Triggers
+
+## Superbuild
+
+superbuild:build:
+    extends:
+        - .rules
+    stage: build
+    variables:
+        PV_CI_MERGED_ONLY: "true"
+        PARAVIEW_BRANCH: $CI_COMMIT_REF_NAME
+        ENABLE_PACKAGE_UPLOAD: "true"
+    trigger:
+        project: paraview/paraview-superbuild
+        branch: $CI_COMMIT_REF_NAME
+        strategy: depend
