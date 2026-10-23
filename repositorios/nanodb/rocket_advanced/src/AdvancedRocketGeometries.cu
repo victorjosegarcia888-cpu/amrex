@@ -153,17 +153,22 @@ RegenerativeJacket makeRegenerativeJacket(double inner_radius_m, double outer_ra
 }
 
 bool renderAerospikePlug(float* d_sdf_field, const AerospikePlug& params) {
+    if (d_sdf_field == nullptr || params.nx <= 0 || params.ny <= 0 || params.nz <= 0 ||
+        !std::isfinite(params.voxel_size) || params.voxel_size <= 0.0f) {
+        return false;
+    }
+
     VoxelGridDesc desc;
     desc.nx = params.nx;
     desc.ny = params.ny;
     desc.nz = params.nz;
     desc.voxel_size = params.voxel_size;
-    desc.origin_x = -params.cowl_radius;
-    desc.origin_y = -params.cowl_radius;
-    desc.origin_z = 0.0f;
+    desc.origin_x = -params.base_radius;
+    desc.origin_y = -params.base_radius;
+    desc.origin_z = -0.5f * params.spike_length;
 
     size_t nvox = (size_t)params.nx * params.ny * params.nz;
-    size_t bytes = nvox * sizeof(float);
+    if (nvox == 0) return false;
 
     cuda::AerospikeUserData host_data;
     host_data.params = params;
@@ -171,7 +176,11 @@ bool renderAerospikePlug(float* d_sdf_field, const AerospikePlug& params) {
     cuda::AerospikeUserData* d_user_data = nullptr;
     cudaError_t err = cudaMalloc(&d_user_data, sizeof(cuda::AerospikeUserData));
     if (err != cudaSuccess) return false;
-    cudaMemcpy(d_user_data, &host_data, sizeof(cuda::AerospikeUserData), cudaMemcpyHostToDevice);
+    err = cudaMemcpy(d_user_data, &host_data, sizeof(cuda::AerospikeUserData), cudaMemcpyHostToDevice);
+    if (err != cudaSuccess) {
+        cudaFree(d_user_data);
+        return false;
+    }
 
     dim3 block(8, 8, 8);
     dim3 grid((params.nx + block.x - 1) / block.x,
@@ -180,14 +189,23 @@ bool renderAerospikePlug(float* d_sdf_field, const AerospikePlug& params) {
 
     cuda::renderImplicitSDFKernel<<<grid, block>>>(d_sdf_field, desc,
                                                    cuda::aerospikeSdfCallback, d_user_data);
-    err = cudaGetLastError();
-    cudaDeviceSynchronize();
+    cudaError_t launch_status = cudaGetLastError();
+    if (launch_status != cudaSuccess) {
+        cudaFree(d_user_data);
+        return false;
+    }
 
+    cudaError_t execution_status = cudaDeviceSynchronize();
     cudaFree(d_user_data);
-    return err == cudaSuccess;
+    return execution_status == cudaSuccess && launch_status == cudaSuccess;
 }
 
 bool renderLatticeInjectorFace(float* d_sdf_field, const LatticeInjectorFace& params) {
+    if (d_sdf_field == nullptr || params.nx <= 0 || params.ny <= 0 || params.nz <= 0 ||
+        !std::isfinite(params.voxel_size) || params.voxel_size <= 0.0f) {
+        return false;
+    }
+
     VoxelGridDesc desc;
     desc.nx = params.nx;
     desc.ny = params.ny;
@@ -195,7 +213,7 @@ bool renderLatticeInjectorFace(float* d_sdf_field, const LatticeInjectorFace& pa
     desc.voxel_size = params.voxel_size;
     desc.origin_x = -params.face_radius;
     desc.origin_y = -params.face_radius;
-    desc.origin_z = 0.0f;
+    desc.origin_z = -0.5 * (double)params.beam_length;
 
     // Generate lattice beams (simplified hexagonal pattern)
     std::vector<float> beam_starts, beam_ends, beam_radii;
@@ -235,13 +253,23 @@ bool renderLatticeInjectorFace(float* d_sdf_field, const LatticeInjectorFace& pa
         num_beams++;
     }
 
+    if (num_beams <= 0) {
+        return false;
+    }
+
     float *d_starts = nullptr, *d_ends = nullptr, *d_radii = nullptr;
-    cudaMalloc(&d_starts, num_beams * 3 * sizeof(float));
-    cudaMalloc(&d_ends, num_beams * 3 * sizeof(float));
-    cudaMalloc(&d_radii, num_beams * sizeof(float));
-    cudaMemcpy(d_starts, beam_starts.data(), num_beams * 3 * sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_ends, beam_ends.data(), num_beams * 3 * sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_radii, beam_radii.data(), num_beams * sizeof(float), cudaMemcpyHostToDevice);
+    cudaError_t err = cudaMalloc(&d_starts, num_beams * 3 * sizeof(float));
+    if (err != cudaSuccess) return false;
+    err = cudaMalloc(&d_ends, num_beams * 3 * sizeof(float));
+    if (err != cudaSuccess) { cudaFree(d_starts); return false; }
+    err = cudaMalloc(&d_radii, num_beams * sizeof(float));
+    if (err != cudaSuccess) { cudaFree(d_starts); cudaFree(d_ends); return false; }
+    err = cudaMemcpy(d_starts, beam_starts.data(), num_beams * 3 * sizeof(float), cudaMemcpyHostToDevice);
+    if (err != cudaSuccess) { cudaFree(d_starts); cudaFree(d_ends); cudaFree(d_radii); return false; }
+    err = cudaMemcpy(d_ends, beam_ends.data(), num_beams * 3 * sizeof(float), cudaMemcpyHostToDevice);
+    if (err != cudaSuccess) { cudaFree(d_starts); cudaFree(d_ends); cudaFree(d_radii); return false; }
+    err = cudaMemcpy(d_radii, beam_radii.data(), num_beams * sizeof(float), cudaMemcpyHostToDevice);
+    if (err != cudaSuccess) { cudaFree(d_starts); cudaFree(d_ends); cudaFree(d_radii); return false; }
 
     dim3 block(8, 8, 8);
     dim3 grid((params.nx + block.x - 1) / block.x,
@@ -250,16 +278,24 @@ bool renderLatticeInjectorFace(float* d_sdf_field, const LatticeInjectorFace& pa
 
     cuda::renderLatticeBeamsKernel<<<grid, block>>>(d_sdf_field, desc,
                                                     d_starts, d_ends, d_radii, num_beams);
-    cudaDeviceSynchronize();
+    cudaError_t launch_status = cudaGetLastError();
+    if (launch_status != cudaSuccess) {
+        cudaFree(d_starts); cudaFree(d_ends); cudaFree(d_radii); return false;
+    }
+    cudaError_t execution_status = cudaDeviceSynchronize();
 
     cudaFree(d_starts);
     cudaFree(d_ends);
     cudaFree(d_radii);
-
-    return true;
+    return execution_status == cudaSuccess;
 }
 
 bool renderRegenerativeJacket(float* d_sdf_field, const RegenerativeJacket& params) {
+    if (d_sdf_field == nullptr || params.nx <= 0 || params.ny <= 0 || params.nz <= 0 ||
+        !std::isfinite(params.voxel_size) || params.voxel_size <= 0.0f) {
+        return false;
+    }
+
     VoxelGridDesc desc;
     desc.nx = params.nx;
     desc.ny = params.ny;
@@ -267,7 +303,7 @@ bool renderRegenerativeJacket(float* d_sdf_field, const RegenerativeJacket& para
     desc.voxel_size = params.voxel_size;
     desc.origin_x = -params.outer_radius;
     desc.origin_y = -params.outer_radius;
-    desc.origin_z = 0.0f;
+    desc.origin_z = -params.outer_radius;
 
     cuda::RegenerativeJacketUserData host_data;
     host_data.params = params;
@@ -275,7 +311,8 @@ bool renderRegenerativeJacket(float* d_sdf_field, const RegenerativeJacket& para
     cuda::RegenerativeJacketUserData* d_user_data = nullptr;
     cudaError_t err = cudaMalloc(&d_user_data, sizeof(cuda::RegenerativeJacketUserData));
     if (err != cudaSuccess) return false;
-    cudaMemcpy(d_user_data, &host_data, sizeof(cuda::RegenerativeJacketUserData), cudaMemcpyHostToDevice);
+    err = cudaMemcpy(d_user_data, &host_data, sizeof(cuda::RegenerativeJacketUserData), cudaMemcpyHostToDevice);
+    if (err != cudaSuccess) { cudaFree(d_user_data); return false; }
 
     dim3 block(8, 8, 8);
     dim3 grid((params.nx + block.x - 1) / block.x,
@@ -284,19 +321,31 @@ bool renderRegenerativeJacket(float* d_sdf_field, const RegenerativeJacket& para
 
     cuda::renderImplicitSDFKernel<<<grid, block>>>(d_sdf_field, desc,
                                                    cuda::regenerativeJacketSdfCallback, d_user_data);
-    err = cudaGetLastError();
-    cudaDeviceSynchronize();
-
+    cudaError_t launch_status = cudaGetLastError();
+    if (launch_status != cudaSuccess) {
+        cudaFree(d_user_data);
+        return false;
+    }
+    cudaError_t execution_status = cudaDeviceSynchronize();
     cudaFree(d_user_data);
-    return err == cudaSuccess;
+    return execution_status == cudaSuccess;
 }
 
 bool performCSGOnDevice(float* d_result, const float* d_a, const float* d_b,
                         int nx, int ny, int nz, const char* operation) {
+    if (d_result == nullptr || d_a == nullptr || d_b == nullptr || nx <= 0 || ny <= 0 || nz <= 0 ||
+        operation == nullptr) {
+        return false;
+    }
+
     int op = 0;
     if (strcmp(operation, "subtract") == 0) op = 1;
     else if (strcmp(operation, "intersect") == 0) op = 2;
     else if (strcmp(operation, "xor") == 0) op = 3;
+    else if (strcmp(operation, "union") == 0) op = 0;
+    else {
+        return false;
+    }
 
     dim3 block(8, 8, 8);
     dim3 grid((nx + block.x - 1) / block.x,
@@ -304,9 +353,12 @@ bool performCSGOnDevice(float* d_result, const float* d_a, const float* d_b,
               (nz + block.z - 1) / block.z);
 
     cuda::csgOperationKernel<<<grid, block>>>(d_result, d_a, d_b, nx, ny, nz, op);
-    cudaDeviceSynchronize();
-
-    return true;
+    cudaError_t launch_status = cudaGetLastError();
+    if (launch_status != cudaSuccess) {
+        return false;
+    }
+    cudaError_t execution_status = cudaDeviceSynchronize();
+    return execution_status == cudaSuccess;
 }
 
 std::vector<int> detectOverhangRegions(const float* d_sdf_field, const VoxelGridDesc& desc,

@@ -65,6 +65,15 @@ inline bool validateDesignCase(const DesignCase& design_case, std::string& error
         error = "geometry inputs are inconsistent or non-positive";
         return false;
     }
+
+    const double throat_radius = geometry.throat_diameter_m * 0.5;
+    const double exit_radius = geometry.exit_diameter_m * 0.5;
+    const double area_ratio = (exit_radius * exit_radius) / (throat_radius * throat_radius);
+    const double relative_error = std::fabs(area_ratio - geometry.expansion_ratio) / geometry.expansion_ratio;
+    if (relative_error > 1e-3) {
+        error = "geometric expansion ratio does not match the throat and exit diameters";
+        return false;
+    }
     if (!std::isfinite(pumps.shaft_speed_rpm) || pumps.shaft_speed_rpm <= 0.0 ||
         !std::isfinite(pumps.lox_mass_flow_kg_per_s) || pumps.lox_mass_flow_kg_per_s <= 0.0 ||
         !std::isfinite(pumps.methane_mass_flow_kg_per_s) || pumps.methane_mass_flow_kg_per_s <= 0.0 ||

@@ -10,6 +10,16 @@
 namespace rocket_advanced {
 namespace cuda {
 
+__device__ inline bool isValidVoxelGrid(const VoxelGridDesc& desc) {
+    return desc.nx > 0 && desc.ny > 0 && desc.nz > 0 &&
+           std::isfinite(desc.voxel_size) && desc.voxel_size > 0.0f &&
+           std::isfinite(desc.origin_x) && std::isfinite(desc.origin_y) && std::isfinite(desc.origin_z);
+}
+
+__device__ inline float cellCenterCoordinate(float origin, int i, float voxel_size) {
+    return origin + (i + 0.5f) * voxel_size;
+}
+
 // ============================================================================
 // SDF primitives (inspired by PicoGKRuntime Shapes)
 // ============================================================================
@@ -20,7 +30,24 @@ __device__ float sdSphere(float x, float y, float z, float cx, float cy, float c
 }
 
 __device__ float sdCylinderZ(float x, float y, float z, float cx, float cy, float r) {
-    return sqrtf((x - cx)*(x - cx) + (y - cy)*(y - cy)) - r;
+    float dx = x - cx;
+    float dy = y - cy;
+    return sqrtf(dx * dx + dy * dy) - r;
+}
+
+__device__ float sdCappedCylinderZ(float x, float y, float z,
+                                  float cx, float cy, float z_min, float z_max,
+                                  float r) {
+    float dx = x - cx;
+    float dy = y - cy;
+    float qx = sqrtf(dx * dx + dy * dy) - r;
+    float z_mid = 0.5f * (z_min + z_max);
+    float half_height = 0.5f * (z_max - z_min);
+    float qy = fabsf(z - z_mid) - half_height;
+    float d = fminf(fmaxf(qx, qy), 0.0f) +
+              sqrtf(fmaxf(qx, 0.0f) * fmaxf(qx, 0.0f) +
+                    fmaxf(qy, 0.0f) * fmaxf(qy, 0.0f));
+    return d;
 }
 
 __device__ float sdTorus(float x, float y, float z, float cx, float cy, float cz,
@@ -44,12 +71,27 @@ __device__ float sdGyroid(float x, float y, float z, float scale, float half_wid
 
 __device__ float sdAerospikePlug(float x, float y, float z, float throat_r, float nu_exit,
                                  float spike_length, float base_r) {
+    if (!std::isfinite(x) || !std::isfinite(y) || !std::isfinite(z)) return 1e6f;
     if (z < 0.0f || z > spike_length) return 1e6f;
-    float r = sqrtf(x*x + y*y);
-    float k = tanf(nu_exit) * 0.1f;
-    float r_spike = throat_r - k * z;
-    if (r_spike < 0.05f * throat_r) r_spike = 0.05f * throat_r;
-    return r - r_spike;
+
+    float radius_xy = hypotf(x, y);
+    float z0 = 0.0f;
+    float z_throat = fmaxf(0.25f * spike_length, 0.1f * spike_length);
+    float z_exit = spike_length;
+    float r_throat = fmaxf(throat_r, 1e-6f);
+    float r_base = fmaxf(base_r, r_throat * 0.5f);
+    float r_exit = fmaxf(r_throat * (1.0f + 0.5f * nu_exit), r_throat);
+
+    float r_profile = r_base;
+    if (z <= z_throat) {
+        float t = z / (z_throat + 1e-6f);
+        r_profile = r_base + (r_throat - r_base) * t;
+    } else {
+        float t = (z - z_throat) / (z_exit - z_throat + 1e-6f);
+        r_profile = r_throat + (r_exit - r_throat) * t;
+    }
+
+    return radius_xy - r_profile;
 }
 
 __device__ float sdBeam(float x, float y, float z, float x1, float y1, float z1,
@@ -73,11 +115,11 @@ __global__ void renderImplicitSDFKernel(float* sdf_field, const VoxelGridDesc de
     int iy = blockIdx.y * blockDim.y + threadIdx.y;
     int iz = blockIdx.z * blockDim.z + threadIdx.z;
 
-    if (ix >= desc.nx || iy >= desc.ny || iz >= desc.nz) return;
+    if (!isValidVoxelGrid(desc) || ix >= desc.nx || iy >= desc.ny || iz >= desc.nz) return;
 
-    float x = desc.origin_x + ix * desc.voxel_size;
-    float y = desc.origin_y + iy * desc.voxel_size;
-    float z = desc.origin_z + iz * desc.voxel_size;
+    float x = cellCenterCoordinate(desc.origin_x, ix, desc.voxel_size);
+    float y = cellCenterCoordinate(desc.origin_y, iy, desc.voxel_size);
+    float z = cellCenterCoordinate(desc.origin_z, iz, desc.voxel_size);
 
     int idx = ix + iy * desc.nx + iz * desc.nx * desc.ny;
     sdf_field[idx] = sdf(x, y, z, user_data);
@@ -132,11 +174,11 @@ __global__ void renderLatticeBeamsKernel(float* sdf_field, const VoxelGridDesc d
     int iy = blockIdx.y * blockDim.y + threadIdx.y;
     int iz = blockIdx.z * blockDim.z + threadIdx.z;
 
-    if (ix >= desc.nx || iy >= desc.ny || iz >= desc.nz) return;
+    if (!isValidVoxelGrid(desc) || ix >= desc.nx || iy >= desc.ny || iz >= desc.nz) return;
 
-    float x = desc.origin_x + ix * desc.voxel_size;
-    float y = desc.origin_y + iy * desc.voxel_size;
-    float z = desc.origin_z + iz * desc.voxel_size;
+    float x = cellCenterCoordinate(desc.origin_x, ix, desc.voxel_size);
+    float y = cellCenterCoordinate(desc.origin_y, iy, desc.voxel_size);
+    float z = cellCenterCoordinate(desc.origin_z, iz, desc.voxel_size);
 
     int idx = ix + iy * desc.nx + iz * desc.nx * desc.ny;
     float d = 1e6f;

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Leap71.QuasiCrystal.Accelerator")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+84f5b187b507a94dd5018fa7765834a5c40b4e75")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+51aebf4f306684c0a40878805ad2014d405e284c")]
 [assembly: System.Reflection.AssemblyProductAttribute("Leap71.QuasiCrystal.Accelerator")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Leap71.QuasiCrystal.Accelerator")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
