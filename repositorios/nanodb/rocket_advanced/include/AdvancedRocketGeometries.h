@@ -30,6 +30,20 @@ struct VoxelGridDesc {
     float origin_x, origin_y, origin_z;
 };
 
+inline bool voxelGridDescValid(const VoxelGridDesc& desc) {
+    return desc.nx > 0 && desc.ny > 0 && desc.nz > 0 &&
+           std::isfinite(desc.voxel_size) && desc.voxel_size > 0.0f &&
+           std::isfinite(desc.origin_x) && std::isfinite(desc.origin_y) && std::isfinite(desc.origin_z);
+}
+
+inline bool voxelGridDescMatches(const VoxelGridDesc& a, const VoxelGridDesc& b) {
+    return a.nx == b.nx && a.ny == b.ny && a.nz == b.nz &&
+           std::fabs(a.voxel_size - b.voxel_size) <= 1e-12f &&
+           std::fabs(a.origin_x - b.origin_x) <= 1e-12f &&
+           std::fabs(a.origin_y - b.origin_y) <= 1e-12f &&
+           std::fabs(a.origin_z - b.origin_z) <= 1e-12f;
+}
+
 /// @brief Signed distance function callback type (inspired by PicoGK PKPFnfSdf)
 typedef float (*SdfFunction)(float x, float y, float z, void* user_data);
 
@@ -196,6 +210,11 @@ bool renderRegenerativeJacket(float* d_sdf_field, const RegenerativeJacket& para
 /// @brief Host-side wrapper: perform CSG boolean operation on device
 bool performCSGOnDevice(float* d_result, const float* d_a, const float* d_b,
                         int nx, int ny, int nz, const char* operation);
+
+/// @brief Perform CSG only when both voxel fields share the same spatial descriptor.
+bool performCSGOnDevice(float* d_result, const float* d_a, const float* d_b,
+                        const VoxelGridDesc& a_desc, const VoxelGridDesc& b_desc,
+                        const char* operation);
 
 /// @brief Host-side wrapper: extract mesh from device SDF and write STL
 bool extractMeshToSTL(const float* d_sdf_field, const VoxelGridDesc& desc,

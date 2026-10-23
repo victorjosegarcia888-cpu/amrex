@@ -331,8 +331,8 @@ bool renderRegenerativeJacket(float* d_sdf_field, const RegenerativeJacket& para
     return execution_status == cudaSuccess;
 }
 
-bool performCSGOnDevice(float* d_result, const float* d_a, const float* d_b,
-                        int nx, int ny, int nz, const char* operation) {
+static bool performCSGOnDeviceImpl(float* d_result, const float* d_a, const float* d_b,
+                                   int nx, int ny, int nz, const char* operation) {
     if (d_result == nullptr || d_a == nullptr || d_b == nullptr || nx <= 0 || ny <= 0 || nz <= 0 ||
         operation == nullptr) {
         return false;
@@ -359,6 +359,23 @@ bool performCSGOnDevice(float* d_result, const float* d_a, const float* d_b,
     }
     cudaError_t execution_status = cudaDeviceSynchronize();
     return execution_status == cudaSuccess;
+}
+
+bool performCSGOnDevice(float* d_result, const float* d_a, const float* d_b,
+                        int nx, int ny, int nz, const char* operation) {
+    return performCSGOnDeviceImpl(d_result, d_a, d_b, nx, ny, nz, operation);
+}
+
+bool performCSGOnDevice(float* d_result, const float* d_a, const float* d_b,
+                        const VoxelGridDesc& a_desc, const VoxelGridDesc& b_desc,
+                        const char* operation) {
+    if (!voxelGridDescValid(a_desc) || !voxelGridDescValid(b_desc)) {
+        return false;
+    }
+    if (!voxelGridDescMatches(a_desc, b_desc)) {
+        return false;
+    }
+    return performCSGOnDeviceImpl(d_result, d_a, d_b, a_desc.nx, a_desc.ny, a_desc.nz, operation);
 }
 
 std::vector<int> detectOverhangRegions(const float* d_sdf_field, const VoxelGridDesc& desc,
@@ -449,6 +466,10 @@ bool renderMultiResAssembly(float* d_combined_sdf, const MultiResAssembly& assem
 
 bool extractMeshToSTL(const float* d_sdf_field, const VoxelGridDesc& desc,
                       const std::string& output_path, int max_vertices) {
+    if (!voxelGridDescValid(desc) || d_sdf_field == nullptr || output_path.empty()) {
+        return false;
+    }
+
     std::ofstream out(output_path);
     if (!out.is_open()) return false;
 
@@ -456,7 +477,11 @@ bool extractMeshToSTL(const float* d_sdf_field, const VoxelGridDesc& desc,
 
     size_t nvox = (size_t)desc.nx * desc.ny * desc.nz;
     float* h_sdf = new float[nvox];
-    cudaMemcpy(h_sdf, d_sdf_field, nvox * sizeof(float), cudaMemcpyDeviceToHost);
+    cudaError_t status = cudaMemcpy(h_sdf, d_sdf_field, nvox * sizeof(float), cudaMemcpyDeviceToHost);
+    if (status != cudaSuccess) {
+        delete[] h_sdf;
+        return false;
+    }
 
     int triangle_count = 0;
     for (int iz = 0; iz < desc.nz - 1; ++iz) {
