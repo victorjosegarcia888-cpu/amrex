@@ -1,0 +1,44 @@
+RESUMEN DE CONVERSACION - AUDITORIA DE ECUACIONES PARA PIKOGK/VDB Y AMREX
+Fecha: 2026-10-23
+
+OBJETIVO
+Revisar ecuaciones en las notas indicadas antes de usarlas en geometria PicoGK/OpenVDB o pruebas con AMReX. Mantener el trabajo incremental y comprobar el codigo y las notas reales antes de adoptar formulas.
+
+RUTAS DE NOTAS REVISADAS
+- repositorios/examples/notes/rocket_tests_classic/match/tests.txt
+- repositorios/examples/notes/rocket_tests_classic/match/notas_o.txt
+- repositorios/examples/kilo_code_instructions_important/ecuations/rocket_pieces/multiple_files/engineInstrucciones.txt
+- repositorios/examples/kilo_code_instructions_important/ecuations/rocket_pieces/multiple_files/enginespecins.txt
+- gemini-code-1788533408855.txt
+- gemini-code-1788533539224.txt
+
+RESULTADOS DEL PRIMER PASE
+1. O/F = mdot_ox / mdot_fuel es la definicion correcta de la relacion de mezcla en masa. Los datos 510/140 kg/s dan 3.642857; las fracciones 78/22 dan 3.545455. Ninguno es exactamente 3.6, por lo que se deben etiquetar como valores aproximados y no como un unico punto de diseno consistente.
+2. mdot_total = mdot_ox + mdot_fuel es correcta para un limite de sistema con solo esos dos flujos.
+3. F = mdot_total * Ve + (Pe - Pa) * Ae es la relacion unidimensional de empuje bajo flujo uniforme y estacionario. No incluye perdidas ni no-uniformidad.
+4. Isp = Ve/g0 no es general si el empuje de presion no es cero. La relacion general es Isp = F/(mdot_total*g0); Ve/g0 aplica si Ve es velocidad de escape efectiva o cuando la tobera esta adaptada.
+5. Para secciones circulares, epsilon = Ae/At = (De/Dt)^2 es correcta. Dt=0.198 m, De_SL=0.62 m y De_VAC=1.5 m producen ratios 9.805121926334 y 57.392102846648, no 34.34 y 80.
+6. R(x)=a0+a1*x+a2*x^2+a3*x^3 es solo una forma polinomica. Sin coeficientes, condiciones de contorno, unidades ni restricciones de contorno no define una tobera.
+7. La helice descrita solo con r(t)=R*cos(t), z(t)=pitch*t esta incompleta porque falta y(t). Si pitch es avance axial por vuelta, una parametrizacion circular es (R*cos(t), R*sin(t), pitch*t/(2*pi)); debe aclararse la convención de pitch.
+8. El campo gyroid trigonometrico es una superficie implicita, pero no es automaticamente un SDF con distancia euclidea. La frecuencia variable requiere mapeo y validacion adicional.
+9. Las notas clasicas de inyectores contienen tablas aparentemente OCR, con digitos/unidades ambiguos; deben cotejarse con el PDF/escaneo original antes de uso cuantitativo.
+10. Los documentos Raptor presentan parametros aproximados y versiones distintas; no constituyen por si solos una especificacion consistente.
+
+CODIGO / VALIDACION AMREX
+- DesignCase.h comprueba que el expansion_ratio declarado sea coherente con los diametros. No valida empuje, combustion ni transferencia de calor.
+- Se preparo el test CPU Tests/Base/RocketEquations, que comprueba suma de caudales, O/F, expansion circular, empuje e Isp.
+- Configuracion usada: cmake -S . -B /tmp/amrex-equation-tests -DAMReX_ENABLE_TESTS=ON -DAMReX_TEST_TYPE=All -DAMReX_SPACEDIM=3 -DAMReX_GPU_BACKEND=NONE -DAMReX_MPI=OFF
+- Validacion: cmake --build /tmp/amrex-equation-tests --target Test_rocket_equations_3d -j4
+- Validacion: ctest --test-dir /tmp/amrex-equation-tests -R '^rocket_equations_3d$' --output-on-failure
+- Resultado verificado: 1/1 test passed. MPI se desactivo porque no esta instalado en el contenedor.
+
+ARCHIVOS DE REFERENCIA
+- Catalogo y estado de auditoria: repositorios/examples/pikoGK_ecuations_vdb/README.md
+- Test AMReX: Tests/Base/RocketEquations/main.cpp
+- Registro CMake del test: Tests/Base/RocketEquations/CMakeLists.txt
+
+ALCANCE PENDIENTE
+Este fue un primer pase, no una auditoria completa de todas las ecuaciones. Quedan por revisar individualmente las relaciones de Bartz/Sutton-Graves, refrigeracion regenerativa, mecanica de materiales, cinetica, turbomaquinaria y geometrias restantes. No usar esas formulas como aprobadas hasta documentar fuente, variables, unidades, supuestos, casos limite y pruebas numericas.
+
+HISTORIAL DE GEOMETRIA
+En el trabajo anterior se inspecciono sdCylinderZ() y se confirmo que ignora z, por lo que describe un cilindro infinito. Existe sdCappedCylinderZ(), pero no se encontraron usos en la ruta revisada. La conversacion anterior tambien trato coherencia de descriptores SDF/CSG/STL; la compilacion CUDA no pudo validarse entonces por falta de nvcc/GPU. Revisar el estado actual de Git antes de continuar.
