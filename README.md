@@ -56,6 +56,9 @@ resources and allow scalable performance on heterogeneous architectures so that
 scientists can efficiently resolve details in large simulations.
 
 More information is available at the [AMReX website](https://amrex-codes.github.io/).
+other:https://github.com/NVIDIA-RTX/RTXPT/blob/main/Rtxpt/Lighting/Distant/EnvMapBaker.cpp
+other info:https://amrex-codes.github.io/amrex/docs_html/TimeIntegration_Chapter.html
+https://github.com/victorjosegarcia888-cpu/EBGeometry/blob/main/Source/EBGeometry_OBJ.hpp
 
 ## Features
 - link:https://amrex-codes.github.io/amrex/docs_html/FFT.html
