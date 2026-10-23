@@ -1,4 +1,5 @@
 #include <AMReX.H>
+#include <AMReX_BLassert.H>
 #include <AMReX_REAL.H>
 
 #include <cmath>
@@ -33,7 +34,7 @@ void test_circular_nozzle_area_ratio ()
         (vacuum_exit_diameter / throat_diameter) *
         (vacuum_exit_diameter / throat_diameter);
 
-    AMREX_ALWAYS_ASSERT(nearly_equal(sea_level_ratio, 9.8051229466, 1.0e-8));
+    AMREX_ALWAYS_ASSERT(nearly_equal(sea_level_ratio, 9.805121926334, 1.0e-8));
     AMREX_ALWAYS_ASSERT(nearly_equal(vacuum_ratio, 57.3921028466, 1.0e-8));
 }
 

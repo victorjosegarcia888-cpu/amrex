@@ -9,7 +9,7 @@ after its assumptions, units, and numerical checks are recorded here.
 
 | Topic | Assessment | Use status |
 | --- | --- | --- |
-| Oxidizer/fuel ratio, `O/F = m_dot_ox / m_dot_fuel` | Correct definition for a mass ratio. The listed 510/140 kg/s gives 3.642857, not exactly 3.6; both can coexist only as rounded reference values. | Usable with explicit units and rounding. |
+| Oxidizer/fuel ratio, `O/F = m_dot_ox / m_dot_fuel` | Correct definition for a mass ratio. The listed 510/140 kg/s gives 3.642857, while mass fractions 78/22 give 3.545455; neither is exactly 3.6. These can only be approximate reference values. | Usable with explicit units and rounding. |
 | Total mass flow, `m_dot = m_dot_ox + m_dot_fuel` | Correct conservation identity for a two-stream total with no other mass streams. | Usable with the stream boundary stated. |
 | Thrust, `F = m_dot * Ve + (Pe - Pa) * Ae` | Correct one-dimensional steady nozzle relation for uniform exit velocity and pressure; it is not a complete model of losses or nonuniform flow. | Usable with assumptions and SI units. |
 | Specific impulse, `Isp = Ve / g0` | Not generally correct when the pressure-thrust term is nonzero. Use `Isp = F / (m_dot * g0)`. `Ve/g0` applies when `Ve` is the effective exhaust velocity, or for a pressure-matched ideal nozzle. | Do not use the source form unqualified. |
